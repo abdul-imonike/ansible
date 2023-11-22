@@ -1,0 +1,35 @@
+---
+- hosts: remote
+  gather_facts: False
+  become: true
+  tasks:
+   - name: Install NGINX
+     apt: pkg=nginx state=present update_cache=true
+     notify:
+      - start nginx
+     become_user: root
+   - name: copy the nginx config file and restart nginx
+     copy:
+       src: /home/abdul/ansible-tutorial/static_site.cfg
+       dest: /etc/nginx/sites-available/static_site.cfg
+     become_user: root
+   - name: create symlink
+     file: 
+       src: /etc/nginx/sites-available/static_site.cfg
+       dest: /etc/nginx/sites-enabled/default
+       state: link
+     become_user: root
+   - name: copy contents of site
+     copy:
+       src: /home/abdul/ansible-tutorial/static_site_src/
+       dest: /home/abdul/static_site
+   - name: restart nginx
+     service:
+       name: nginx
+       state: restarted
+     become_user: root
+  handlers:
+  - name: start nginx
+    service: name=nginx state=started
+    become_user: root
+
